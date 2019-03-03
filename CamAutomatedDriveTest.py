@@ -1,17 +1,15 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import keras
-from keras.models import Sequential
-from keras.optimizers import Adam
-from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense
 
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split as tts
 
-import cv2
 import pandas as pd
 import ntpath
+
+import matplotlib.image as mpimg
+import cv2
 import random
 
 datadir = 'Data'
@@ -42,8 +40,8 @@ center = (bins[:-1]+bins[1:])/2
 plt.bar(center, hist, width=0.05)
 plt.plot((np.min(data['steering']), np.max(data['steering'])),
         (samples_per_bin, samples_per_bin))
-plt.show()
-
+# plt.show()
+plt.close()
 
 remove_list = []
 for j in range(num_bins):
@@ -70,7 +68,8 @@ hist, _ = np.histogram(data['steering'], num_bins)
 plt.bar(center, hist, width=0.05)
 plt.plot((np.min(data['steering']), np.max(data['steering'])),
         (samples_per_bin, samples_per_bin))
-plt.show()
+# plt.show()
+plt.close()
 
 
 def load_img_steering(datadir, df):
@@ -99,4 +98,43 @@ axes[0].set_title('Training set')
 axes[1].hist(y_valid, bins=num_bins, width=0.05, color='red')
 axes[1].set_title('Validation set')
 
-plt.show(fig)
+# plt.show(fig)
+plt.close(fig)
+
+# add preprocessing to images
+def img_preprocess(img):
+    img = mpimg.imread(img)
+    # crop scenery and bonnet from images
+    # remove everything in 0..60 and in 135..140
+    img = img[60:135, :, :]
+    # change color space. Use YUV format instead of RGB (Recommended by nVIDIA)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
+    # Gaussian blur
+    img = cv2.GaussianBlur(img, (3, 3), 0)
+    # resize
+    img = cv2.resize(img, (200, 66))
+    # normalize
+    img = img/255
+    return img
+
+image = image_paths[100]
+original_image = mpimg.imread(image)
+preprocessed_image = img_preprocess(image)
+
+
+fig_img, axs = plt.subplots(1, 2, figsize=(15, 10))
+fig_img.tight_layout()
+axs[0].imshow(original_image)
+axs[0].set_title('Original image')
+axs[1].imshow(preprocessed_image)
+axs[1].set_title('Preprocessed image')
+plt.show(fig_img)
+
+# apply img_preprocess to each train item
+X_train = np.array(list(map(img_preprocess, X_train)))
+X_valid = np.array(list(map(img_preprocess, X_valid)))
+
+plt.imshow(X_train[random.randint(0, len(X_train)-1)])
+plt.axis('off')
+plt.show()
+print(X_train.shape)
