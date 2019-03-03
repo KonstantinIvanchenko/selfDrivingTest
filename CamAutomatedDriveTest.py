@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split as tts
 
+import keras
+from keras.optimizers import Adam
+from keras.models import Sequential
+from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout
+
 import pandas as pd
 import ntpath
 
@@ -138,3 +143,34 @@ plt.imshow(X_train[random.randint(0, len(X_train)-1)])
 plt.axis('off')
 plt.show()
 print(X_train.shape)
+
+def nvidia_model():
+    model = Sequential()
+    model.add(Conv2D(24, 5, 5, subsample=(2, 2), input_shape=(66, 200, 3),
+                     activation='relu'))
+    model.add(Conv2D(36, 5, 5, subsample=(2,2), activation='relu'))
+    model.add(Conv2D(48, 5, 5, subsample=(2, 2), activation='relu'))
+    model.add(Conv2D(64, 3, 3, activation='relu'))
+    model.add(Conv2D(64, 3, 3, activation='relu'))
+    model.add(Dropout(0.5))
+
+    model.add(Flatten())
+    model.add(Dense(100, activation='relu'))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(1))
+
+    optimizer = Adam(lr=0.001)
+    model.compile(loss='mse', optimizer=optimizer)
+    return model
+
+
+model = nvidia_model()
+print(model.summary())
+
+history = model.fit(X_train, y_train, epochs=30,
+          validation_data=(X_valid,y_valid), batch_size=100, verbose=1, shuffle=1)
+
+
