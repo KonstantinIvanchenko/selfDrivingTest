@@ -128,7 +128,7 @@ axs[0].imshow(original_image)
 axs[0].set_title('Original image')
 axs[1].imshow(preprocessed_image)
 axs[1].set_title('Preprocessed image')
-plt.show(fig_img)
+# plt.show(fig_img)
 
 # apply img_preprocess to each train item
 X_train = np.array(list(map(img_preprocess, X_train)))
