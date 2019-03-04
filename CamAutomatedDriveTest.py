@@ -175,16 +175,15 @@ def nvidia_model():
 
 
 
-#model = nvidia_model()
-#print(model.summary())
+model = nvidia_model()
+print(model.summary())
 
-#history = model.fit(X_train, y_train, epochs=30,
-          validation_data=(X_valid,y_valid), batch_size=100, verbose=1, shuffle=1)
-
-model = load_model('model.h5')
-
+history = model.fit(X_train, y_train, epochs=25,
+         validation_data=(X_valid,y_valid), batch_size=100, verbose=1, shuffle=1)
 
 model.save('model.h5')
+
+#model = load_model('model.h5')
 
 plt.clf()
 plt.plot(history.history['loss'])
