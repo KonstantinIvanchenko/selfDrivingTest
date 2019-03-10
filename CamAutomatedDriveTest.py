@@ -141,7 +141,7 @@ def flip(image, steering_angle):
 
 # add preprocessing to images
 def img_preprocess(img):
-    img = mpimg.imread(img)
+    # img = mpimg.imread(img)
     # crop scenery and bonnet from images
     # remove everything in 0..60 and in 135..140
     img = img[60:135, :, :]
@@ -157,7 +157,7 @@ def img_preprocess(img):
 
 # apply augmentations randomly
 def random_augmentation(image, steering_angle):
-    # image = mpimg.imread(image)
+    image = mpimg.imread(image)
     # rand generates a number from 0..1
     if np.random.rand() < 0.5:
         image = pan(image)
@@ -169,7 +169,7 @@ def random_augmentation(image, steering_angle):
         image, steering_angle = flip(image, steering_angle)
     return image, steering_angle
 
-
+'''
 # apply preprocessing to some image just for checking
 image = image_paths[100]
 steering = steerings[100]
@@ -201,6 +201,7 @@ plt.imshow(X_train[random.randint(0, len(X_train)-1)])
 plt.axis('off')
 # plt.show()
 print(X_train.shape)
+'''
 
 def nvidia_model():
     model = Sequential()
@@ -230,10 +231,9 @@ def nvidia_model():
     return model
 
 
-
 model = nvidia_model()
 print(model.summary())
-
+''' Commented out: change to fit_generator
 history = model.fit(X_train, y_train, epochs=25,
          validation_data=(X_valid, y_valid), batch_size=100, verbose=1, shuffle=1)
 
@@ -248,6 +248,9 @@ plt.legend(['training', 'validation'])
 plt.title('Loss')
 plt.xlabel('Epoch')
 plt.show()
+
+'''
+
 
 # this function generates training and validation batches as required on fly
 def batch_generator(image_paths, steering_angles, batch_size, is_training):
@@ -275,3 +278,18 @@ def batch_generator(image_paths, steering_angles, batch_size, is_training):
 
 X_train_gen, y_train_gen = next(batch_generator(X_train, y_train, 1, 1))
 X_valid_gen, y_valid_gen = next(batch_generator(X_valid, y_valid, 1, 0))
+
+history = model.fit_generator(batch_generator(X_train, y_train, batch_size=100, is_training=True),
+                              steps_per_epoch=300, epochs=10,
+                              validation_data=batch_generator(X_valid, y_valid, batch_size=100,is_training=False),
+                              validation_steps=200, verbose=1, shuffle=1)
+
+model.save('model.h5')
+
+plt.clf()
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.legend(['training', 'validation'])
+plt.title('Loss')
+plt.xlabel('Epoch')
+plt.show()
