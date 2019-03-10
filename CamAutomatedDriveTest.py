@@ -41,7 +41,7 @@ print(data.head())
 num_bins = 25
 
 # make data more uniform by setting threshold with samples_per_bin
-samples_per_bin = 300
+samples_per_bin = 400
 
 hist, bins = np.histogram(data['steering'], num_bins)
 center = (bins[:-1]+bins[1:])/2
@@ -212,21 +212,21 @@ def nvidia_model():
     model.add(Conv2D(48, 5, 5, subsample=(2, 2), activation='elu'))
     model.add(Conv2D(64, 3, 3, activation='elu'))
     model.add(Conv2D(64, 3, 3, activation='elu'))
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
 
     model.add(Flatten())
     model.add(Dense(100, activation='elu'))
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
 
     model.add(Dense(50, activation='elu'))
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
 
     model.add(Dense(10, activation='elu'))
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
 
     model.add(Dense(1))
 
-    optimizer = Adam(lr=0.001)
+    optimizer = Adam(lr=0.0001)
     model.compile(loss='mse', optimizer=optimizer)
     return model
 

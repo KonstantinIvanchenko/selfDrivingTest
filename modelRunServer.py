@@ -22,7 +22,7 @@ sio = socketio.Server()
 
 app = Flask(__name__)
 
-gl_speed_limit = 10
+gl_speed_limit = 30
 
 # sends control parameters back to the simulator
 def send_control(steering_angle, throttle):
