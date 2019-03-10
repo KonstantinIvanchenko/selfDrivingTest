@@ -190,7 +190,6 @@ for i in range(10):
     axs[i][1].set_title('Augm img')
 # plt.show(fig_img)
 
-# original_image = random_augmentation(image, steerings)
 # preprocessed_image = img_preprocess(image)
 
 
@@ -249,3 +248,30 @@ plt.legend(['training', 'validation'])
 plt.title('Loss')
 plt.xlabel('Epoch')
 plt.show()
+
+# this function generates training and validation batches as required on fly
+def batch_generator(image_paths, steering_angles, batch_size, is_training):
+    while True:
+        batch_img = []
+        batch_steering = []
+
+        for i in range(batch_size):
+            random_i = random.randint(0, len(image_paths) - 1)
+
+            if is_training:
+                img, steer = random_augmentation(image_paths[random_i], steering_angles[random_i])
+            else:
+                # no augmentation is necessary during validation
+                img = mpimg.imread(image_paths[random_i])
+                steer = steering_angles[random_i]
+
+            img = img_preprocess(img)
+
+            batch_img.append(img)
+            batch_steering.append(steer)
+
+        yield (np.asarray(batch_img), np.asarray(batch_steering))
+
+
+X_train_gen, y_train_gen = next(batch_generator(X_train, y_train, 1, 1))
+X_valid_gen, y_valid_gen = next(batch_generator(X_valid, y_valid, 1, 0))
