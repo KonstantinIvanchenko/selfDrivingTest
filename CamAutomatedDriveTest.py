@@ -18,6 +18,8 @@ import matplotlib.image as mpimg
 import cv2
 import random
 
+from imgaug import augmenters as iaa
+
 datadir = 'Data'
 columns = ['center', 'left', 'right', 'steering', 'throttle', 'reverse', 'speed']
 data = pd.read_csv(os.path.join(datadir, 'driving_log.csv'), names=columns)
@@ -91,7 +93,7 @@ def load_img_steering(datadir, df):
     steerings = np.asarray(steering)
     return image_paths, steerings
 
-
+# both array indices correspond to each other
 image_paths, steerings = load_img_steering(datadir+'/IMG', data)
 
 X_train, X_valid, y_train, y_valid = tts(image_paths, steerings, test_size=0.2, random_state=5)
@@ -106,6 +108,36 @@ axes[1].set_title('Validation set')
 
 # plt.show(fig)
 plt.close(fig)
+
+# augmentation with zoom in
+def zoom(image):
+    # augmented zoom in limit to 30%
+    zoom = iaa.Affine(scale=(1, 1.3))
+    image = zoom.augment_image(image)
+    return image
+
+# augmentation with pan in x an y directions
+def pan(image):
+    # augmented pan by 10% in both directions
+    pan = iaa.Affine(translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)})
+    image = pan.augment_image(image)
+    return image
+
+# augmentation with brightness regulation
+def brightness(image):
+    # augmentation with brightness level between 20%..120%
+    brightness = iaa.Multiply((0.2, 1.2))
+    image = brightness.augment_image(image)
+    return image
+
+# augmentation with image flipping (mirroring)
+# not a part of imgaug library - use opencv instead.
+# The steering_angle shall be inverted together
+# Remark: essentially it allows for better data balancing
+def flip(image, steering_angle):
+    image = cv2.flip(image, 1)
+    steering_angle =- steering_angle
+    return image, steering_angle
 
 # add preprocessing to images
 def img_preprocess(img):
@@ -123,18 +155,44 @@ def img_preprocess(img):
     img = img/255
     return img
 
+# apply augmentations randomly
+def random_augmentation(image, steering_angle):
+    # image = mpimg.imread(image)
+    # rand generates a number from 0..1
+    if np.random.rand() < 0.5:
+        image = pan(image)
+    if np.random.rand() < 0.5:
+        image = zoom(image)
+    if np.random.rand() < 0.5:
+        image = brightness(image)
+    if np.random.rand() < 0.5:
+        image, steering_angle = flip(image, steering_angle)
+    return image, steering_angle
+
+
+# apply preprocessing to some image just for checking
 image = image_paths[100]
-original_image = mpimg.imread(image)
-preprocessed_image = img_preprocess(image)
+steering = steerings[100]
 
-
-fig_img, axs = plt.subplots(1, 2, figsize=(15, 10))
+# 10 - rows, 2 - columns
+fig_img, axs = plt.subplots(10, 2, figsize=(15, 50))
 fig_img.tight_layout()
-axs[0].imshow(original_image)
-axs[0].set_title('Original image')
-axs[1].imshow(preprocessed_image)
-axs[1].set_title('Preprocessed image')
+
+for i in range(10):
+    random_i = random.randint(0, len(image_paths) - 1)
+    img = mpimg.imread(image_paths[random_i])
+    steer = steerings[random_i]
+    augmented_image, new_steering = random_augmentation(img, steer)
+
+    axs[i][0].imshow(img)
+    axs[i][0].set_title('Original img')
+    axs[i][1].imshow(augmented_image)
+    axs[i][1].set_title('Augm img')
 # plt.show(fig_img)
+
+# original_image = random_augmentation(image, steerings)
+# preprocessed_image = img_preprocess(image)
+
 
 # apply img_preprocess to each train item
 X_train = np.array(list(map(img_preprocess, X_train)))
@@ -147,7 +205,6 @@ print(X_train.shape)
 
 def nvidia_model():
     model = Sequential()
-
 
     model.add(Conv2D(24, 5, 5, subsample=(2, 2), input_shape=(66, 200, 3),
                      activation='elu'))
