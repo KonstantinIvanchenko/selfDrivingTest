@@ -84,7 +84,7 @@ def load_img_steering(datadir, df):
     for i in range(len(data)):
         indexed_data = data.iloc[i]
         center, left, right = indexed_data[0], indexed_data[1], indexed_data[2]
-        # use strip to remove all spaces in the path (there are no but..)
+        # use strip to remove all spaces in the path (there are none but..)
         image_path.append(os.path.join(datadir, center.strip()))
         steering.append(float(indexed_data[3]))
     image_paths = np.asarray(image_path)
@@ -179,11 +179,11 @@ model = nvidia_model()
 print(model.summary())
 
 history = model.fit(X_train, y_train, epochs=25,
-         validation_data=(X_valid,y_valid), batch_size=100, verbose=1, shuffle=1)
+         validation_data=(X_valid, y_valid), batch_size=100, verbose=1, shuffle=1)
 
 model.save('model.h5')
 
-#model = load_model('model.h5')
+# model = load_model('model.h5')
 
 plt.clf()
 plt.plot(history.history['loss'])
